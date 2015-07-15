@@ -1,0 +1,138 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+        <title>Random field generator</title>
+        <script>
+
+            function showParamInputs(showP, showM, showN) {
+                if (showM) {
+                    $(".paramM").show();
+                } else {
+                    $(".paramM").hide();
+                }
+                if (showN) {
+                    $(".paramN").show();
+                } else {
+                    $(".paramN").hide();
+                }
+                if (showP) {
+                    $(".paramP").show();
+                } else {
+                    $(".paramP").hide();
+                }
+            }
+            function draw(arr1) {
+
+                var ctx = document.getElementByID("canvas").getContext("2d");
+
+                var height = arr1.length;
+                var width = arr1[0].length;
+
+                var h = ctx.canvas.height;
+                var w = ctx.canvas.width;
+
+                var imgData = ctx.getImageData(0, 0, w, h);
+                var data = imgData.data;  // the array of RGBA values
+
+                for (var i = 0; i < height; i++) {
+                    for (var j = 0; j < width; j++) {
+                        var s = 4 * i * w + 4 * j;  // calculate the index in the array
+                        var x = arr1[i][j];  // the RGB values
+                        data[s] = x;
+                        data[s + 1] = x;
+                        data[s + 2] = x;
+                        data[s + 3] = 255;  // fully opaque
+                    }
+                }
+
+                ctx.putImageData(imgData, 0, 0);
+            }
+
+            $(document).ready(function () {                        // When the HTML DOM is ready loading, then execute the following function...
+                $('#somebutton').click(function () {               // Locate HTML DOM element with ID "somebutton" and assign the following function to its "click" event...
+                    $.get('getNextImg', function (responseText) { // Execute Ajax GET request on URL of "someservlet" and execute the following function with Ajax response text...
+                        $('#somediv').text(responseText);         // Locate HTML DOM element with ID "somediv" and set its text content with the response text.
+                    });
+                });
+
+                $("#corType").change(function () {
+                    var selId = $("#corType").val();
+                    switch (selId) {
+                        case '0':
+                            showParamInputs(true, true, false)
+                            break
+                        case '1':
+                        case '2':
+                            showParamInputs(true, true, true)
+                            break
+                        case '3':
+                            showParamInputs(false, false, false)
+                            break
+                    }
+                });
+                showParamInputs(true, true, false)
+
+                $("#form").submit(function (e) {
+                    e.preventDefault();
+                    $.ajax({
+                        type: "POST",
+                        url: "getNextImg",
+                        data: $("#form").serialize(),
+                        success: function (msg) {
+                            alert(msg);
+                            var arr = JSON.parse(msg);
+                            draw(arr);
+                        }
+                    });
+                });
+
+            });
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <h2>Random Field Generator</h2>
+            <p>Select parameters and press ok button:</p>
+            <form role="form" id="form">
+                <div class="row">
+                    <div class="form-group col-xs-6">
+                        <label for="corType">Correlation function type:</label>
+                        <select class="form-control" id="corType" name="corType">
+                            <option value="0">Bessel of 2nd kind</option>
+                            <option value="1">Sinusoidal</option>
+                            <option value="2">Exponential</option>
+                            <option value="3">White Noise</option>
+                        </select>
+                        <br>
+                        <label for="size">Field size (px): </label>
+                        <input type="range" min="100" max="300" id="size" name="size" value="250">
+                        <br>
+                        <label for="quantity">Quantity: </label>
+                        <input type="range" min="1" max="30" id="quantity" name="quantity" value="10">
+                        <br>
+
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-addon paramP">P = </div>
+                                <input type="number" class="form-control paramP" id="paramP" name="paramP" placeholder="P" value="0.5">
+                                <div class="input-group-addon paramM">M = </div>
+                                <input type="number" class="form-control paramM" id="paramM" name="paramM" placeholder="M" value="20">
+                                <div class="input-group-addon paramN">N = </div>
+                                <input type="number" class="form-control paramN" id="paramN" name="paramN" placeholder="N" value="20">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-default">ok</button>
+        </div>
+    </form>
+</div>
+
+<canvas id="canvas" height="300" width="300"></canvas>
+
+</body>
+</html>
